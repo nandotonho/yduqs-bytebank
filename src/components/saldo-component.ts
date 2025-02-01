@@ -1,10 +1,21 @@
+import { formatarMoeda } from "../utils/formatters.js";
+import Conta from "../types/Conta.js";
 
-const elementoSaldo = document.querySelector(".saldo-valor .valor") as HTMLElement;
-const elementoDataAcesso = document.querySelector(".block-saldo time") as HTMLElement;
+let saldo: number = 3000;
+
+const elementoSaldo = document.querySelector(".saldo-valor .valor") as HTMLInputElement;
+
+renderizarSaldo();
+
+function renderizarSaldo() {
+    if (elementoSaldo != null ) {
+        elementoSaldo.textContent = formatarMoeda(Conta.getSaldo());
+    }
+}
 
 const SaldoComponent = {
     atualizar() {
-        console.log("SaldoComponent: atualizar!")
+        renderizarSaldo();
     }
 }
 

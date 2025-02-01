@@ -1,43 +1,49 @@
-import { Transacao } from "./transacao/Transacao.js";
-import { TipoTransacao } from "./transacao/TipoTransacao.js";
-import { GrupoTransacao } from "./transacao/GrupoTransacao.js";
+import { Transacao } from "./Transacao.js";
+import { TipoTransacao } from "./TipoTransacao.js";
+import { GrupoTransacao } from "./GrupoTransacao.js";
+import { ResumoTransacoes } from "./ResumoTransacoes.js";
 
 let saldo: number = JSON.parse(localStorage.getItem("saldo")) || 0;
 const transacoes: Transacao[] = JSON.parse(localStorage.getItem("transacoes"), (key: string, value: string) => {
-    if (key === "data") {
+    if (key == "data") {
         return new Date(value);
     }
+
     return value;
 }) || [];
+const strDataUltimoAcesso: string = JSON.parse(localStorage.getItem("data-ultimo-acesso"));
+const dataUltimoAcesso: Date = strDataUltimoAcesso ? new Date(strDataUltimoAcesso) : null;
 
 function debitar(valor: number): void {
     if (valor <= 0) {
-        throw new Error("O valor a ser debitado deve ser maior que zero!");
+        throw Error("Valor debitado deve ser maior que zero!");
     }
     if (valor > saldo) {
-        throw new Error("Saldo insuficiente!");
+        throw Error("Saldo insuficiente!");
     }
-
     saldo -= valor;
     localStorage.setItem("saldo", saldo.toString());
 }
 
 function depositar(valor: number): void {
     if (valor <= 0) {
-        throw new Error("O valor a ser depositado deve ser maior que zero!");
+        throw Error("Valor depositado deve ser maior que zero!");
     }
-
     saldo += valor;
     localStorage.setItem("saldo", saldo.toString());
 }
 
 const Conta = {
-    getSaldo() {
+    getSaldo(): number {
         return saldo;
     },
 
     getDataAcesso(): Date {
         return new Date();
+    },
+
+    getDataUltimoAcesso(): Date {
+        return dataUltimoAcesso ? dataUltimoAcesso : this.getDataAcesso();
     },
 
     getGruposTransacoes(): GrupoTransacao[] {
@@ -48,7 +54,7 @@ const Conta = {
 
         for (let transacao of transacoesOrdenadas) {
             let labelGrupoTransacao: string = transacao.data.toLocaleDateString("pt-br", { month: "long", year: "numeric" });
-            if (labelAtualGrupoTransacao !== labelGrupoTransacao) {
+            if (labelAtualGrupoTransacao != labelGrupoTransacao) {
                 labelAtualGrupoTransacao = labelGrupoTransacao;
                 gruposTransacoes.push({
                     label: labelGrupoTransacao,
@@ -61,21 +67,42 @@ const Conta = {
         return gruposTransacoes;
     },
 
+    getResumoTransacoes(): ResumoTransacoes {
+        let resumoTransacoes: ResumoTransacoes = {
+            totalDepositos: 0,
+            totalPagamentosBoleto: 0,
+            totalTransferencias: 0
+        };
+
+        resumoTransacoes.totalDepositos = transacoes.filter(transacao => transacao.tipoTransacao == TipoTransacao.DEPOSITO)
+            .reduce((acc, transacao) => acc + transacao.valor, 0);
+        resumoTransacoes.totalPagamentosBoleto = transacoes.filter(transacao => transacao.tipoTransacao == TipoTransacao.PAGAMENTO_BOLETO)
+            .reduce((acc, transacao) => acc + transacao.valor, 0);
+        resumoTransacoes.totalTransferencias = transacoes.filter(transacao => transacao.tipoTransacao == TipoTransacao.TRANSFERENCIA)
+            .reduce((acc, transacao) => acc + transacao.valor, 0);
+
+        return resumoTransacoes;
+    },
+
     registrarTransacao(novaTransacao: Transacao): void {
         if (novaTransacao.tipoTransacao == TipoTransacao.DEPOSITO) {
             depositar(novaTransacao.valor);
-        } 
+        }
         else if (novaTransacao.tipoTransacao == TipoTransacao.TRANSFERENCIA || novaTransacao.tipoTransacao == TipoTransacao.PAGAMENTO_BOLETO) {
             debitar(novaTransacao.valor);
             novaTransacao.valor *= -1;
-        } 
+        }
         else {
-            throw new Error("Tipo de Transação é inválido!");
+            throw Error("Tipo de Transação é inválido!");
         }
 
         transacoes.push(novaTransacao);
-        console.log(this.getGruposTransacoes());
         localStorage.setItem("transacoes", JSON.stringify(transacoes));
+        console.log(this.getGruposTransacoes());
+    },
+
+    registrarUltimoAcesso(data: Date): void {
+        localStorage.setItem("data-ultimo-acesso", JSON.stringify(data));
     }
 }
 

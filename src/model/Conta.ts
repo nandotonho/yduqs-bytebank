@@ -1,3 +1,4 @@
+import { Armazenador } from "../utils/Armazenador.js";
 import { Transacao } from "./Transacao.js";
 import { TipoTransacao } from "./Transacao.js";
 import { GrupoTransacao } from "./Transacao.js";
@@ -10,13 +11,13 @@ class Conta {
 
     private dataEncerramento: Date;
 
-    private saldo: number = JSON.parse(localStorage.getItem("saldo")) || 0;
+    private saldo: number = Armazenador.obter("saldo") || 0;
 
     private limite: number;
 
     private dataUltimoAcesso: Date
-        = JSON.parse(localStorage.getItem("data-ultimo-acesso"))
-        ? new Date(JSON.parse(localStorage.getItem("data-ultimo-acesso")))
+        = Armazenador.obter(("data-ultimo-acesso"))
+        ? new Date(Armazenador.obter(("data-ultimo-acesso")))
         : null;
 
     private transacoes: Transacao[] = [];
@@ -89,7 +90,7 @@ class Conta {
             throw Error("Saldo insuficiente!");
         }
         this.saldo -= valor;
-        localStorage.setItem("saldo", this.saldo.toString());
+        Armazenador.salvar("saldo", this.saldo);
     }
 
     private depositar(valor: number): void {
@@ -97,7 +98,7 @@ class Conta {
             throw Error("Valor depositado deve ser maior que zero!");
         }
         this.saldo += valor;
-        localStorage.setItem("saldo", this.saldo.toString());
+        Armazenador.salvar("saldo", this.saldo);
     }
 
     public registrarTransacao(novaTransacao: Transacao): void {
@@ -113,7 +114,7 @@ class Conta {
         }
 
         this.transacoes.push(novaTransacao);
-        localStorage.setItem("transacoes", JSON.stringify(this.transacoes));
+        Armazenador.salvar("transacoes", this.transacoes);
     }
 
     public getGruposTransacoes(): GrupoTransacao[] {
@@ -123,7 +124,7 @@ class Conta {
         let transacaoAtual: Transacao;
         for (let transacao of this.transacoes) {
             transacaoAtual = new Transacao(transacao.getTipoTransacao(), transacao.getValor(), transacao.getData());
-            listaTransacoes.push(transacao);
+            listaTransacoes.push(transacaoAtual);
         }
 
         const transacoesOrdenadas: Transacao[] = listaTransacoes.sort((t1, t2) => t2.getData().getTime() - t1.getData().getTime());
@@ -168,7 +169,7 @@ class Conta {
     private loadTransacoes() {
         this.transacoes = [];
 
-        const transacoesArmazenadas = JSON.parse(localStorage.getItem("transacoes"), (key: string, value: string) => {
+        const transacoesArmazenadas = Armazenador.obter(("transacoes"), (key: string, value: string) => {
             if (key == "data") {
                 return new Date(value);
             }

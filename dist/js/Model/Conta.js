@@ -1,13 +1,14 @@
+import { Armazenador } from "../utils/Armazenador.js";
 import { Transacao } from "./Transacao.js";
 import { TipoTransacao } from "./Transacao.js";
 class Conta {
     titular;
     dataAbertura;
     dataEncerramento;
-    saldo = JSON.parse(localStorage.getItem("saldo")) || 0;
+    saldo = Armazenador.obter("saldo") || 0;
     limite;
-    dataUltimoAcesso = JSON.parse(localStorage.getItem("data-ultimo-acesso"))
-        ? new Date(JSON.parse(localStorage.getItem("data-ultimo-acesso")))
+    dataUltimoAcesso = Armazenador.obter(("data-ultimo-acesso"))
+        ? new Date(Armazenador.obter(("data-ultimo-acesso")))
         : null;
     transacoes = [];
     constructor() {
@@ -63,14 +64,14 @@ class Conta {
             throw Error("Saldo insuficiente!");
         }
         this.saldo -= valor;
-        localStorage.setItem("saldo", this.saldo.toString());
+        Armazenador.salvar("saldo", this.saldo);
     }
     depositar(valor) {
         if (valor <= 0) {
             throw Error("Valor depositado deve ser maior que zero!");
         }
         this.saldo += valor;
-        localStorage.setItem("saldo", this.saldo.toString());
+        Armazenador.salvar("saldo", this.saldo);
     }
     registrarTransacao(novaTransacao) {
         if (novaTransacao.getTipoTransacao() == TipoTransacao.DEPOSITO) {
@@ -84,7 +85,7 @@ class Conta {
             throw Error("Tipo de Transação é inválido!");
         }
         this.transacoes.push(novaTransacao);
-        localStorage.setItem("transacoes", JSON.stringify(this.transacoes));
+        Armazenador.salvar("transacoes", this.transacoes);
     }
     getGruposTransacoes() {
         const gruposTransacoes = [];
@@ -92,7 +93,7 @@ class Conta {
         let transacaoAtual;
         for (let transacao of this.transacoes) {
             transacaoAtual = new Transacao(transacao.getTipoTransacao(), transacao.getValor(), transacao.getData());
-            listaTransacoes.push(transacao);
+            listaTransacoes.push(transacaoAtual);
         }
         const transacoesOrdenadas = listaTransacoes.sort((t1, t2) => t2.getData().getTime() - t1.getData().getTime());
         let labelAtualGrupoTransacao = "";
@@ -128,7 +129,7 @@ class Conta {
     }
     loadTransacoes() {
         this.transacoes = [];
-        const transacoesArmazenadas = JSON.parse(localStorage.getItem("transacoes"), (key, value) => {
+        const transacoesArmazenadas = Armazenador.obter(("transacoes"), (key, value) => {
             if (key == "data") {
                 return new Date(value);
             }

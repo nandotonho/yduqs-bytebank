@@ -1,7 +1,6 @@
-import { formatarTransacao } from "../utils/formatters.js";
-import { FormatoData } from "../types/FormatoData.js";
+import { Transacao } from "../model/Transacao.js";
 import SaldoComponent from "./saldo-component.js";
-import Conta from "../types/Conta.js";
+import Conta from "../model/Conta.js";
 import ExtratoComponent from "./extrato-component.js";
 const elementoFormulario = document.querySelector(".block-nova-transacao form");
 elementoFormulario.addEventListener("submit", function (event) {
@@ -17,16 +16,10 @@ elementoFormulario.addEventListener("submit", function (event) {
         let tipoTransacao = inputTipoTransacao.value;
         let valor = inputValor.valueAsNumber;
         let data = new Date(inputData.value + " 00:00:00");
-        const novaTransacao = {
-            tipoTransacao: tipoTransacao,
-            valor: valor,
-            data: data
-        };
-        Conta.registrarTransacao(novaTransacao);
+        const novaTransacao = new Transacao(tipoTransacao, valor, data);
+        new Conta().registrarTransacao(novaTransacao);
         SaldoComponent.atualizar();
         ExtratoComponent.atualizar();
-        console.log(formatarTransacao(novaTransacao.valor, novaTransacao.data, FormatoData.DIA_SEMANA_DIA_MES_ANO));
-        console.log(formatarTransacao(novaTransacao.valor, novaTransacao.data, FormatoData.PADRAO));
         elementoFormulario.reset();
     }
     catch (erro) {

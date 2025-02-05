@@ -1,6 +1,5 @@
 import { Armazenador } from "../utils/Armazenador.js";
-import { Transacao } from "./Transacao.js";
-import { TipoTransacao } from "./Transacao.js";
+import { Transacao, TipoTransacao } from "./Transacao.js";
 class Conta {
     titular;
     dataAbertura;
@@ -111,7 +110,8 @@ class Conta {
         return gruposTransacoes;
     }
     registrarUltimoAcesso(data) {
-        localStorage.setItem("data-ultimo-acesso", JSON.stringify(data));
+        this.dataUltimoAcesso = data;
+        Armazenador.salvar("data-ultimo-acesso", this.dataUltimoAcesso);
     }
     getResumoTransacoes() {
         let resumoTransacoes = {

@@ -1,8 +1,5 @@
 import { Armazenador } from "../utils/Armazenador.js";
-import { Transacao } from "./Transacao.js";
-import { TipoTransacao } from "./Transacao.js";
-import { GrupoTransacao } from "./Transacao.js";
-import { ResumoTransacoes } from "./Transacao.js";
+import { Transacao, TipoTransacao, GrupoTransacao, ResumoTransacoes, AtributoTransacao } from "./Transacao.js";
 
 class Conta {
     private titular: string;
@@ -11,12 +8,12 @@ class Conta {
 
     private dataEncerramento: Date;
 
-    private saldo: number = Armazenador.obter("saldo") || 0;
+    private saldo: number = Armazenador.obter<number>("saldo") || 0;
 
     private limite: number;
 
     private dataUltimoAcesso: Date
-        = Armazenador.obter(("data-ultimo-acesso"))
+        = Armazenador.obter<string>(("data-ultimo-acesso"))
         ? new Date(Armazenador.obter(("data-ultimo-acesso")))
         : null;
 
@@ -126,10 +123,9 @@ class Conta {
             transacaoAtual = new Transacao(transacao.getTipoTransacao(), transacao.getValor(), transacao.getData());
             listaTransacoes.push(transacaoAtual);
         }
-
         const transacoesOrdenadas: Transacao[] = listaTransacoes.sort((t1, t2) => t2.getData().getTime() - t1.getData().getTime());
-        let labelAtualGrupoTransacao: string = "";
 
+        let labelAtualGrupoTransacao: string = "";
         for (let transacao of transacoesOrdenadas) {
             let labelGrupoTransacao: string = transacao.getData().toLocaleDateString("pt-br", { month: "long", year: "numeric" });
             if (labelAtualGrupoTransacao != labelGrupoTransacao) {
@@ -146,7 +142,8 @@ class Conta {
     }
 
     public registrarUltimoAcesso(data: Date): void {
-        localStorage.setItem("data-ultimo-acesso", JSON.stringify(data));
+        this.dataUltimoAcesso = data;
+        Armazenador.salvar("data-ultimo-acesso", this.dataUltimoAcesso);
     }
 
     public getResumoTransacoes(): ResumoTransacoes {
@@ -169,7 +166,7 @@ class Conta {
     private loadTransacoes() {
         this.transacoes = [];
 
-        const transacoesArmazenadas = Armazenador.obter(("transacoes"), (key: string, value: string) => {
+        const transacoesArmazenadas: AtributoTransacao[] = Armazenador.obter<AtributoTransacao[]>(("transacoes"), (key: string, value: string) => {
             if (key == "data") {
                 return new Date(value);
             }

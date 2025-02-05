@@ -77,3 +77,9 @@ export type ResumoTransacoes = {
     totalTransferencias: number;
     totalPagamentosBoleto: number;
 }
+
+export type AtributoTransacao = {
+    tipoTransacao: TipoTransacao;
+    valor: number;
+    data: Date;
+}
